@@ -1,7 +1,6 @@
 package mappings
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/go-chi/chi/v5/middleware"
@@ -10,7 +9,6 @@ import (
 
 	resp "url-shortener/internal/lib/api/response"
 	"url-shortener/internal/lib/logger/sl"
-	"url-shortener/internal/storage"
 	"url-shortener/pkg/models"
 )
 
@@ -45,14 +43,14 @@ func GetAll(log *slog.Logger, mappingGetter MappingGetterAll) http.HandlerFunc {
 		)
 
 		arr_mappings, err := mappingGetter.GetAllMappingsWithLink()
-		if errors.Is(err, storage.ErrURLNotFound) {
-			//TODO
-			// log.Info("url not found", "alias", alias)
+		// if errors.Is(err, storage.ErrURLNotFound) {
+		// 	//TODO
+		// 	// log.Info("url not found", "alias", alias)
 
-			render.JSON(w, r, resp.Error("not found"))
+		// 	render.JSON(w, r, resp.Error("not found"))
 
-			return
-		}
+		// 	return
+		// }
 		if err != nil {
 			log.Error("failed to get url", sl.Err(err))
 

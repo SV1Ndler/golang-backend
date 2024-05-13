@@ -1,7 +1,6 @@
 package posts
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 
@@ -12,7 +11,6 @@ import (
 
 	resp "url-shortener/internal/lib/api/response"
 	"url-shortener/internal/lib/logger/sl"
-	"url-shortener/internal/storage"
 )
 
 // URLGetter is an interface for getting url by alias.
@@ -51,14 +49,14 @@ func Delete(log *slog.Logger, postDeleter PostDeleter) http.HandlerFunc {
 		}
 
 		err = postDeleter.DeletePost(id)
-		if errors.Is(err, storage.ErrURLNotFound) {
-			//TODO
-			// log.Info("url not found", "alias", alias)
+		// if errors.Is(err, storage.ErrURLNotFound) {
+		// 	//TODO
+		// 	// log.Info("url not found", "alias", alias)
 
-			render.JSON(w, r, resp.Error("not found"))
+		// 	render.JSON(w, r, resp.Error("not found"))
 
-			return
-		}
+		// 	return
+		// }
 		if err != nil {
 			log.Error("failed to get url", sl.Err(err))
 
@@ -72,7 +70,7 @@ func Delete(log *slog.Logger, postDeleter PostDeleter) http.HandlerFunc {
 		// // redirect to found url
 		// http.Redirect(w, r, resURL, http.StatusFound)
 		render.JSON(w, r, deletePostResponse{
-			Response: resp.OK(), 
+			Response: resp.OK(),
 		})
 	}
 }

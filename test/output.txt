@@ -1,9 +1,0 @@
-
-
-&{POST https://api.imgur.com/3/image HTTP/1.1 1 1 map[Authorization:[Client-ID 01e493a6685580c] Content-Type:[multipart/form-data; boundary=dc7eecdced794a26f6fe83c467aa7b36a0d53f2a2907e265e0b5b21a4eed]] {--dc7eecdced794a26f6fe83c467aa7b36a0d53f2a2907e265e0b5b21a4eed
-Content-Disposition: form-data; name="image"; filename="dont care about name"
-Content-Type: application/octet-stream
-
-
---dc7eecdced794a26f6fe83c467aa7b36a0d53f2a2907e265e0b5b21a4eed--
-} 0x52f600 253 [] false api.imgur.com map[] map[] <nil> map[]   <nil> <nil> <nil> {{}} <nil> [] map[]}

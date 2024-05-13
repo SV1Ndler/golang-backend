@@ -1,7 +1,6 @@
 package images
 
 import (
-	"errors"
 	"net/http"
 	"time"
 
@@ -11,7 +10,6 @@ import (
 
 	resp "url-shortener/internal/lib/api/response"
 	"url-shortener/internal/lib/logger/sl"
-	"url-shortener/internal/storage"
 	"url-shortener/pkg/models"
 )
 
@@ -47,14 +45,14 @@ func GetAll(log *slog.Logger, postGetter ImageGetterAll) http.HandlerFunc {
 		)
 
 		arr_images, err := postGetter.GetAllImages()
-		if errors.Is(err, storage.ErrURLNotFound) {
-			//TODO
-			// log.Info("url not found", "alias", alias)
+		// if errors.Is(err, storage.ErrURLNotFound) {
+		// 	//TODO
+		// 	// log.Info("url not found", "alias", alias)
 
-			render.JSON(w, r, resp.Error("not found"))
+		// 	render.JSON(w, r, resp.Error("not found"))
 
-			return
-		}
+		// 	return
+		// }
 		if err != nil {
 			log.Error("failed to get url", sl.Err(err))
 
@@ -71,7 +69,7 @@ func GetAll(log *slog.Logger, postGetter ImageGetterAll) http.HandlerFunc {
 		for idx := range arr_images {
 			resp.Array = append(resp.Array, getAllImageResponseItem{
 				ID:      arr_images[idx].ID,
-				Link:   arr_images[idx].Link,
+				Link:    arr_images[idx].Link,
 				Created: arr_images[idx].Created,
 			})
 		}

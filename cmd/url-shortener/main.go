@@ -20,7 +20,8 @@ import (
 	mwLogger "url-shortener/internal/http-server/middleware/logger"
 	"url-shortener/internal/lib/logger/handlers/slogpretty"
 	"url-shortener/internal/lib/logger/sl"
-	"url-shortener/pkg/models/simple"
+	"url-shortener/pkg/models/sql"
+	// "url-shortener/pkg/models/simple"
 )
 
 const (
@@ -41,10 +42,11 @@ func main() {
 	)
 	log.Debug("debug messages are enabled")
 
-	clientID := "01e493a6685580c"
-	storagePosts := simple.NewPost()
-	storageImages, er := simple.NewImage(clientID)
-	storageMapping := simple.NewPostImageMapping(storageImages)
+	// clientID := "01e493a6685580c" TODO
+	storage, er := sql.New()
+	// storagePosts := simple.NewPost()
+	// storageImages, er := simple.NewImage(clientID)
+	// storageMapping := simple.NewPostImageMapping(storageImages)
 	if er != nil {
 		log.Error("failed to init storage", sl.Err(er))
 		os.Exit(1)
@@ -73,18 +75,18 @@ func main() {
 	// })
 
 	// router.Get("/{alias}", redirect.New(log, storage))
-	router.Get("/posts/{id}", posts.Get(log, storagePosts))
-	router.Delete("/posts/{id}", posts.Delete(log, storagePosts))
-	router.Get("/posts", posts.GetAll(log, storagePosts))
-	router.Post("/posts", posts.Create(log, storagePosts))
+	router.Get("/posts/{id}", posts.Get(log, storage))
+	router.Delete("/posts/{id}", posts.Delete(log, storage))
+	router.Get("/posts", posts.GetAll(log, storage))
+	router.Post("/posts", posts.Create(log, storage))
 
-	router.Get("/images/{id}", images.Get(log, storageImages))
-	router.Delete("/images/{id}", images.Delete(log, storageImages))
-	router.Get("/images", images.GetAll(log, storageImages))
-	router.Post("/images", images.Create(log, storageImages))
+	router.Get("/images/{id}", images.Get(log, storage))
+	router.Delete("/images/{id}", images.Delete(log, storage))
+	router.Get("/images", images.GetAll(log, storage))
+	router.Post("/images", images.Create(log, storage))
 
-	router.Get("/posts/{post-id}/images/{image-id}", mappings.Create(log, storageMapping))
-	router.Get("/posts/{post-id}/images", mappings.GetAll(log, storageMapping))
+	router.Post("/posts/{post-id}/images/{image-id}", mappings.Create(log, storage))
+	router.Get("/posts/{post-id}/images", mappings.GetPostImages(log, storage))
 
 	log.Info("starting server", slog.String("address", cfg.Address))
 

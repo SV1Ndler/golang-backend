@@ -13,7 +13,6 @@ import (
 
 	resp "url-shortener/internal/lib/api/response"
 	"url-shortener/internal/lib/logger/sl"
-	"url-shortener/internal/storage"
 )
 
 // URLGetter is an interface for getting url by alias.
@@ -82,14 +81,14 @@ func Create(log *slog.Logger, postCreater PostCreater) http.HandlerFunc {
 		// }
 
 		id, err := postCreater.CreatePost(req.Title, req.Content, req.Created)
-		if errors.Is(err, storage.ErrURLExists) {
-			// TODO
-			// log.Info("url already exists", slog.String("url", req.URL))
+		// if errors.Is(err, storage.ErrURLExists) {
+		// 	// TODO
+		// 	// log.Info("url already exists", slog.String("url", req.URL))
 
-			render.JSON(w, r, resp.Error("url already exists"))
+		// 	render.JSON(w, r, resp.Error("url already exists"))
 
-			return
-		}
+		// 	return
+		// }
 		if err != nil {
 			log.Error("failed to add url", sl.Err(err))
 

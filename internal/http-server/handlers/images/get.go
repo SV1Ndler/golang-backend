@@ -1,7 +1,6 @@
 package images
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -13,7 +12,6 @@ import (
 
 	resp "url-shortener/internal/lib/api/response"
 	"url-shortener/internal/lib/logger/sl"
-	"url-shortener/internal/storage"
 	"url-shortener/pkg/models"
 )
 
@@ -60,14 +58,14 @@ func Get(log *slog.Logger, imageGetter ImageGetter) http.HandlerFunc {
 		}
 
 		img, err := imageGetter.GetImage(id)
-		if errors.Is(err, storage.ErrURLNotFound) {
-			//TODO
-			// log.Info("url not found", "alias", alias)
+		// if errors.Is(err, storage.ErrURLNotFound) {
+		// 	//TODO
+		// 	// log.Info("url not found", "alias", alias)
 
-			render.JSON(w, r, resp.Error("not found"))
+		// 	render.JSON(w, r, resp.Error("not found"))
 
-			return
-		}
+		// 	return
+		// }
 		if err != nil {
 			log.Error("failed to get url", sl.Err(err))
 
@@ -82,9 +80,9 @@ func Get(log *slog.Logger, imageGetter ImageGetter) http.HandlerFunc {
 		// http.Redirect(w, r, resURL, http.StatusFound)
 		render.JSON(w, r, getImageResponse{
 			Response: resp.OK(),
-			ID:      	img.ID,
-			Link: 		img.Link,
-			Created: 	img.Created,
+			ID:       img.ID,
+			Link:     img.Link,
+			Created:  img.Created,
 		})
 	}
 }

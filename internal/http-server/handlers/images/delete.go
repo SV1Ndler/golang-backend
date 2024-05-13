@@ -1,7 +1,6 @@
 package images
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 
@@ -12,7 +11,6 @@ import (
 
 	resp "url-shortener/internal/lib/api/response"
 	"url-shortener/internal/lib/logger/sl"
-	"url-shortener/internal/storage"
 )
 
 // URLGetter is an interface for getting url by alias.
@@ -51,14 +49,14 @@ func Delete(log *slog.Logger, imageDeleter ImageDeleter) http.HandlerFunc {
 		}
 
 		err = imageDeleter.DeleteImage(id)
-		if errors.Is(err, storage.ErrURLNotFound) {
-			//TODO
-			// log.Info("url not found", "alias", alias)
+		// if errors.Is(err, storage.ErrURLNotFound) {
+		// 	//TODO
+		// 	// log.Info("url not found", "alias", alias)
 
-			render.JSON(w, r, resp.Error("not found"))
+		// 	render.JSON(w, r, resp.Error("not found"))
 
-			return
-		}
+		// 	return
+		// }
 		if err != nil {
 			log.Error("failed to get url", sl.Err(err))
 
