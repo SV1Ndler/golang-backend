@@ -33,3 +33,11 @@ type PostImageMappingWithLink struct {
 	PostID  int
 	Link    string
 }
+
+type User struct {
+	ID       int
+	Email    string
+	Name     string
+	Login    string
+	Password string
+}

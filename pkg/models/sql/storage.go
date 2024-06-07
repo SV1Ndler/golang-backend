@@ -58,6 +58,13 @@ func New() (*Storage, error) {
 		image_id INTEGER NOT NULL REFERENCES Image(id) ON DELETE CASCADE,
 		post_id INTEGER NOT NULL  REFERENCES Post(id) ON DELETE CASCADE,
 		UNIQUE (image_id, post_id));
+
+	CREATE TABLE IF NOT EXISTS  user_ (
+		id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+		email TEXT NOT NULL,
+		login TEXT NOT NULL UNIQUE,
+		password TEXT NOT NULL,
+		name TEXT NOT NULL UNIQUE);
 	`)
 	if err != nil {
 		tx.Rollback()

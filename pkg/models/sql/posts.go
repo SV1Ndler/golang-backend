@@ -38,7 +38,7 @@ func (s *Storage) CreatePost(title string, content string, created time.Time) (i
 	return int(id), nil
 }
 
-// GetTask получает задачу из хранилища по ID. Если ID не существует -
+// GetPost получает пост из хранилища по ID. Если ID не существует -
 // будет возвращена ошибка.
 func (s *Storage) GetPost(id int) (models.Post, error) {
 	const op = "storage.sql.GetPost"
@@ -71,7 +71,7 @@ func (s *Storage) GetPost(id int) (models.Post, error) {
 	return res, nil
 }
 
-// DeleteTask удаляет задачу с заданным ID. Если ID не существует -
+// DeletePost удаляет пост с заданным ID. Если ID не существует -
 // будет возвращена ошибка.
 func (s *Storage) DeletePost(id int) error {
 	const op = "storage.sql.DeletePost"
@@ -101,7 +101,7 @@ func (s *Storage) DeletePost(id int) error {
 	return nil
 }
 
-// GetAllTasks возвращает из хранилища все задачи в произвольном порядке.
+// GetAllPosts возвращает из хранилища все посты в произвольном порядке.
 func (s *Storage) GetAllPosts() ([]models.Post, error) {
 	const op = "storage.sql.GetAllPosts"
 
@@ -140,4 +140,36 @@ func (s *Storage) GetAllPosts() ([]models.Post, error) {
 	}
 
 	return allPosts, nil
+}
+
+func (s *Storage) UpdatePost(id int, title string, content string) (int, error) {
+	const op = "storage.sql.UpdatePost"
+
+	ctx := context.Background()
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+
+	stmt, err := tx.Prepare(`
+	UPDATE post SET title = $1, content = $2
+		WHERE id = $3
+		RETURNING id`)
+	if err != nil {
+		tx.Rollback()
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+
+	err = stmt.QueryRow(title, content, id).Scan(&id)
+	if err != nil {
+		tx.Rollback()
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return int(id), nil
 }
