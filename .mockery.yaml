@@ -1,0 +1,5 @@
+# filename: "{{.InterfaceName}}.go"
+dir: "{{.PackagePath}}/tyty"
+with-expecter: False
+keeptree: True
+all: True

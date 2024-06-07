@@ -32,7 +32,7 @@ type getPostImagesResponse struct {
 	Array []getPostImagesResponseItem `json:"content,omitempty"`
 }
 
-//go:generate go run github.com/vektra/mockery/v2@v2.28.2 --name=URLGetter
+//go:generate go run github.com/vektra/mockery/v2@v2.40.1 --name=ImagesGetterFromPost
 type ImagesGetterFromPost interface {
 	GetPostImages(postID int) ([]models.Image, error)
 }

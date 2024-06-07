@@ -26,12 +26,12 @@ type getAllPostResponseItem struct {
 	Created time.Time `json:"created,omitempty"`
 }
 
-type getAllPostResponse struct {
+type GetAllPostResponse struct {
 	resp.Response
 	Array []getAllPostResponseItem `json:"content,omitempty"`
 }
 
-//go:generate go run github.com/vektra/mockery/v2@v2.28.2 --name=URLGetter
+//go:generate go run github.com/vektra/mockery/v2@v2.40.2 --name=PostGetterAll
 type PostGetterAll interface {
 	GetAllPosts() ([]models.Post, error)
 }
@@ -46,16 +46,8 @@ func GetAll(log *slog.Logger, postGetter PostGetterAll) http.HandlerFunc {
 		)
 
 		arr_posts, err := postGetter.GetAllPosts()
-		// if errors.Is(err, storage.ErrURLNotFound) {
-		// 	//TODO
-		// 	// log.Info("url not found", "alias", alias)
-
-		// 	render.JSON(w, r, resp.Error("not found"))
-
-		// 	return
-		// }
 		if err != nil {
-			log.Error("failed to get url", sl.Err(err))
+			log.Error("failed to get all posts", sl.Err(err))
 
 			render.JSON(w, r, resp.Error("internal error"))
 
@@ -66,7 +58,7 @@ func GetAll(log *slog.Logger, postGetter PostGetterAll) http.HandlerFunc {
 
 		// // redirect to found url
 		// http.Redirect(w, r, resURL, http.StatusFound)
-		resp := getAllPostResponse{Response: resp.OK(), Array: make([]getAllPostResponseItem, 0, len(arr_posts))}
+		resp := GetAllPostResponse{Response: resp.OK(), Array: make([]getAllPostResponseItem, 0, len(arr_posts))}
 		for idx := range arr_posts {
 			resp.Array = append(resp.Array, getAllPostResponseItem{
 				ID:      arr_posts[idx].ID,

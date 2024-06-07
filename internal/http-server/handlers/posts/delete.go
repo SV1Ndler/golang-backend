@@ -19,11 +19,11 @@ import (
 // type deletePostRequest struct {
 // }
 
-type deletePostResponse struct {
+type DeletePostResponse struct {
 	resp.Response
 }
 
-//go:generate go run github.com/vektra/mockery/v2@v2.28.2 --name=URLGetter
+//go:generate go run github.com/vektra/mockery/v2@v2.40.2 --name=PostDeleter
 type PostDeleter interface {
 	DeletePost(id int) error
 }
@@ -37,26 +37,17 @@ func Delete(log *slog.Logger, postDeleter PostDeleter) http.HandlerFunc {
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
 
-		// alias := chi.URLParam(r, "alias")
 		id, err := strconv.Atoi(chi.URLParam(r, "id"))
 		if err != nil || id < 0 {
 			// TODO
-			log.Info("bad id")
+			// log.Info("bad id")
 
-			render.JSON(w, r, resp.Error("invalid request"))
+			render.JSON(w, r, resp.Error("invalid request: bad id"))
 
 			return
 		}
 
 		err = postDeleter.DeletePost(id)
-		// if errors.Is(err, storage.ErrURLNotFound) {
-		// 	//TODO
-		// 	// log.Info("url not found", "alias", alias)
-
-		// 	render.JSON(w, r, resp.Error("not found"))
-
-		// 	return
-		// }
 		if err != nil {
 			log.Error("failed to get url", sl.Err(err))
 
@@ -64,12 +55,13 @@ func Delete(log *slog.Logger, postDeleter PostDeleter) http.HandlerFunc {
 
 			return
 		}
-		// TODO
-		// log.Info("got url", slog.String("url", resURL))
+
+
+		log.Info("delete id", slog.Int("id", id))
 
 		// // redirect to found url
 		// http.Redirect(w, r, resURL, http.StatusFound)
-		render.JSON(w, r, deletePostResponse{
+		render.JSON(w, r, DeletePostResponse{
 			Response: resp.OK(),
 		})
 	}

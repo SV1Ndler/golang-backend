@@ -1,12 +1,12 @@
-package images
+package posts
 
 import (
-	"encoding/base64"
 	"errors"
 	"io"
 	"net/http"
-	"time"
+	"strconv"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"github.com/go-playground/validator/v10"
@@ -19,49 +19,59 @@ import (
 // URLGetter is an interface for getting url by alias.
 //
 
-type createImageRequest struct {
-	File string `json:"file" validate:"required"`
+type updatePostRequest struct {
+	// ID      int    `json:"id" validate:"required"`
+	Title   string `json:"title" validate:"required"`
+	Content string `json:"content" validate:"required"`
 	// Created time.Time `json:"created,omitempty"`
 }
 
-type createImageResponse struct {
+type UpdatePostResponse struct {
 	resp.Response
 	ID int `json:"id,omitempty"`
 }
 
-//go:generate go run github.com/vektra/mockery/v2@v2.40.1 --name=ImageCreater
-type ImageCreater interface {
-	CreateImage(image []byte, created time.Time) (int, error)
+//go:generate go run github.com/vektra/mockery/v2@v2.40.2 --name=PostUpdater
+type PostUpdater interface {
+	UpdatePost(id int, title string, content string) (int, error)
 }
 
-func Create(log *slog.Logger, imageCreater ImageCreater) http.HandlerFunc {
+func Update(log *slog.Logger, postUpdater PostUpdater) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "handlers.images.Create"
+		const op = "handlers.posts.Update"
 
 		log := log.With(
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
 
-		var req createImageRequest
+		id, err := strconv.Atoi(chi.URLParam(r, "id"))
+		if err != nil || id < 0 {
+			// TODO
+			log.Info("bad id")
 
-		err := render.DecodeJSON(r.Body, &req)
+			render.JSON(w, r, resp.Error("invalid request"))
+
+			return
+		}
+
+		var req updatePostRequest
+
+		err = render.DecodeJSON(r.Body, &req)
 		if errors.Is(err, io.EOF) {
 			// Такую ошибку встретим, если получили запрос с пустым телом.
 			// Обработаем её отдельно
 			log.Error("request body is empty")
-			log.Error("\n")
 
+			// render.Status(r, http.StatusBadRequest) // ???
 			render.JSON(w, r, resp.Error("empty request"))
 
 			return
 		}
 		if err != nil {
-			// log.Error("\n")
-			// log.Error(err.Error())
 			log.Error("failed to decode request body", sl.Err(err))
-			// log.Error("\n")
 
+			// render.Status(r, http.StatusBadRequest) // ???
 			render.JSON(w, r, resp.Error("failed to decode request"))
 
 			return
@@ -79,32 +89,18 @@ func Create(log *slog.Logger, imageCreater ImageCreater) http.HandlerFunc {
 			return
 		}
 
-		// alias := req.Alias
-		// if alias == "" {
-		// 	alias = random.NewRandomString(aliasLength)
-		// }
-
-		bytes, _ := base64.StdEncoding.DecodeString(req.File)
-		id, err := imageCreater.CreateImage(bytes, time.Now())
-		// if errors.Is(err, storage.ErrURLExists) {
-		// 	// TODO
-		// 	// log.Info("url already exists", slog.String("url", req.URL))
-
-		// 	render.JSON(w, r, resp.Error("url already exists"))
-
-		// 	return
-		// }
+		id, err = postUpdater.UpdatePost(id, req.Title, req.Content)
 		if err != nil {
-			log.Error("failed to add url", sl.Err(err))
+			log.Error("failed to update post", sl.Err(err))
 
-			render.JSON(w, r, resp.Error("failed to add url"))
+			render.JSON(w, r, resp.Error("internal error"))
 
 			return
 		}
 
-		log.Info("url added", slog.Int64("id", int64(id)))
+		log.Info("post updated", slog.Int64("id", int64(id)))
 
-		render.JSON(w, r, createImageResponse{
+		render.JSON(w, r, UpdatePostResponse{
 			Response: resp.OK(),
 			ID:       id,
 		})

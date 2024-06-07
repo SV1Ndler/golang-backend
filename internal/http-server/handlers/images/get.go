@@ -28,7 +28,7 @@ type getImageResponse struct {
 	Created time.Time `json:"created,omitempty"`
 }
 
-//go:generate go run github.com/vektra/mockery/v2@v2.28.2 --name=URLGetter
+//go:generate go run github.com/vektra/mockery/v2@v2.40.1 --name=ImageGetter
 type ImageGetter interface {
 	GetImage(id int) (models.Image, error)
 }

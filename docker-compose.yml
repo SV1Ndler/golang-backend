@@ -37,7 +37,7 @@ services:
     ports:
       - '1234:5432'
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - ./pg_data:/var/lib/postgresql/data
     networks:
       - learning
 
@@ -56,8 +56,8 @@ services:
   #   networks:
   #     - learning
 
-volumes:
-  pg_data:
+# volumes:
+#   pg_data:
   # pg_data_test:
 
 # Networks to be created to facilitate communication between containers

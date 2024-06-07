@@ -1,4 +1,4 @@
-package posts
+package login
 
 import (
 	"errors"
@@ -9,41 +9,43 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"github.com/go-playground/validator/v10"
+	jwt "github.com/golang-jwt/jwt/v5"
 	"golang.org/x/exp/slog"
 
 	resp "url-shortener/internal/lib/api/response"
 	"url-shortener/internal/lib/logger/sl"
+	"url-shortener/pkg/models"
 )
 
 // URLGetter is an interface for getting url by alias.
 //
 
-type createPostRequest struct {
-	Title   string `json:"title" validate:"required"`
-	Content string `json:"content" validate:"required"`
-	// Created time.Time `json:"created,omitempty"`
+type loginRequest struct {
+	Login    string `json:"login" validate:"required"`
+	Password string `json:"password" validate:"required"`
 }
 
-type CreatePostResponse struct {
+type LoginResponse struct {
 	resp.Response
-	ID int `json:"id,omitempty"`
+	AccessToken string `json:"access_token"`
 }
 
-//go:generate go run github.com/vektra/mockery/v2@v2.40.2 --name=PostCreater
-type PostCreater interface {
-	CreatePost(title string, content string, created time.Time) (int, error)
+//go:generate go run github.com/vektra/mockery/v2@v2.40.2 --name=UserGetter
+type UserGetter interface {
+	GetUserByLoginAndPassword(login string, password string) (models.User, error)
 }
 
-func Create(log *slog.Logger, postCreater PostCreater) http.HandlerFunc {
+func New(log *slog.Logger, userGetter UserGetter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "handlers.posts.Create"
+		const op = "handlers.login.New"
+		var jwtSecretKey = []byte("secret") //TODO
 
 		log := log.With(
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
 
-		var req createPostRequest
+		var req loginRequest
 
 		err := render.DecodeJSON(r.Body, &req)
 		if errors.Is(err, io.EOF) {
@@ -77,20 +79,36 @@ func Create(log *slog.Logger, postCreater PostCreater) http.HandlerFunc {
 			return
 		}
 
-		id, err := postCreater.CreatePost(req.Title, req.Content, time.Now())
+		user, err := userGetter.GetUserByLoginAndPassword(req.Login, req.Password)
 		if err != nil {
 			log.Error("failed to create post", sl.Err(err))
 
+			render.JSON(w, r, resp.Error("login or password is incorrect"))
+
+			return
+		}
+
+		log.Info("login succeed")
+
+		payload := jwt.MapClaims{
+			"sub": user.Email,
+			"exp": time.Now().Add(time.Hour * 72).Unix(),
+		}
+
+		// Создаем новый JWT-токен и подписываем его по алгоритму HS256
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
+
+		t, err := token.SignedString(jwtSecretKey)
+		if err != nil {
+			log.Error("failed to create token", sl.Err(err)) // TODO!!!!
 			render.JSON(w, r, resp.Error("internal error"))
 
 			return
 		}
 
-		log.Info("post created", slog.Int64("id", int64(id)))
-
-		render.JSON(w, r, CreatePostResponse{
-			Response: resp.OK(),
-			ID:       id,
+		render.JSON(w, r, LoginResponse{
+			Response:    resp.OK(),
+			AccessToken: t,
 		})
 	}
 }

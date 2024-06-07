@@ -10,10 +10,13 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
+	"github.com/go-chi/jwtauth/v5"
 	"golang.org/x/exp/slog"
 
 	"url-shortener/internal/config"
 	"url-shortener/internal/http-server/handlers/images"
+	"url-shortener/internal/http-server/handlers/login"
 	"url-shortener/internal/http-server/handlers/mappings"
 	"url-shortener/internal/http-server/handlers/posts"
 
@@ -22,6 +25,7 @@ import (
 	"url-shortener/internal/lib/logger/sl"
 	"url-shortener/pkg/models/sql"
 	// "url-shortener/pkg/models/simple"
+	// "github.com/go-chi/cors"
 )
 
 const (
@@ -65,28 +69,48 @@ func main() {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
 
-	// router.Route("/url", func(r chi.Router) {
-	// 	r.Use(middleware.BasicAuth("url-shortener", map[string]string{
-	// 		cfg.HTTPServer.User: cfg.HTTPServer.Password,
-	// 	}))
+	router.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "UPDATE", "DELETE"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	}))
 
-	// 	r.Post("/", save.New(log, storage))
-	// 	// TODO: add DELETE /url/{id}
-	// })
+	router.Group(func(r chi.Router) {
+		// var tokenAuth *jwtauth.JWTAuth
+		tokenAuth := jwtauth.New("HS256", []byte("secret"), nil)
 
-	// router.Get("/{alias}", redirect.New(log, storage))
-	router.Get("/posts/{id}", posts.Get(log, storage))
-	router.Delete("/posts/{id}", posts.Delete(log, storage))
+		r.Use(jwtauth.Verifier(tokenAuth))
+		r.Use(jwtauth.Authenticator(tokenAuth))
+
+		r.Post("/posts", posts.Create(log, storage))
+		r.Delete("/posts/{id}", posts.Delete(log, storage))
+		r.Patch("/posts/{id}", posts.Update(log, storage))
+
+		r.Delete("/images/{id}", images.Delete(log, storage))
+		r.Post("/images", images.Create(log, storage))
+
+		r.Post("/posts/{post-id}/images/{image-id}", mappings.Create(log, storage))
+		r.Get("/posts/{post-id}/images", mappings.GetPostImages(log, storage))
+	})
+
 	router.Get("/posts", posts.GetAll(log, storage))
-	router.Post("/posts", posts.Create(log, storage))
+	router.Get("/posts/{id}", posts.Get(log, storage))
+	// router.Delete("/posts/{id}", posts.Delete(log, storage))
+	// router.Post("/posts", posts.Create(log, storage))
+	// router.Patch("/posts/{id}", posts.Update(log, storage))
 
 	router.Get("/images/{id}", images.Get(log, storage))
-	router.Delete("/images/{id}", images.Delete(log, storage))
 	router.Get("/images", images.GetAll(log, storage))
-	router.Post("/images", images.Create(log, storage))
+	// router.Delete("/images/{id}", images.Delete(log, storage))
+	// router.Post("/images", images.Create(log, storage))
 
-	router.Post("/posts/{post-id}/images/{image-id}", mappings.Create(log, storage))
-	router.Get("/posts/{post-id}/images", mappings.GetPostImages(log, storage))
+	// router.Post("/posts/{post-id}/images/{image-id}", mappings.Create(log, storage))
+	// router.Get("/posts/{post-id}/images", mappings.GetPostImages(log, storage))
+
+	router.Get("/login", login.New(log, storage))
 
 	log.Info("starting server", slog.String("address", cfg.Address))
 

@@ -21,7 +21,7 @@ import (
 type getPostRequest struct {
 }
 
-type getPostResponse struct {
+type GetPostResponse struct {
 	resp.Response
 	ID      int       `json:"id,omitempty"`
 	Title   string    `json:"title,omitempty"`
@@ -29,7 +29,7 @@ type getPostResponse struct {
 	Created time.Time `json:"created,omitempty"`
 }
 
-//go:generate go run github.com/vektra/mockery/v2@v2.28.2 --name=URLGetter
+//go:generate go run github.com/vektra/mockery/v2@v2.40.2 --name=PostGetter
 type PostGetter interface {
 	GetPost(id int) (models.Post, error)
 }
@@ -79,7 +79,7 @@ func Get(log *slog.Logger, postGetter PostGetter) http.HandlerFunc {
 
 		// // redirect to found url
 		// http.Redirect(w, r, resURL, http.StatusFound)
-		render.JSON(w, r, getPostResponse{
+		render.JSON(w, r, GetPostResponse{
 			Response: resp.OK(),
 			ID:       post.ID,
 			Title:    post.Title,
