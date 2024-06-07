@@ -115,11 +115,6 @@ func (s *Storage) GetMappingWithLink(id int) (models.PostImageMappingWithLink, e
 		return resErr, fmt.Errorf("%s: execute statement: %w", op, err)
 	}
 
-	if err != nil {
-		tx.Rollback()
-		return resErr, fmt.Errorf("%s: %w", op, err)
-	}
-
 	err = tx.Commit()
 	if err != nil {
 		return resErr, fmt.Errorf("%s: %w", op, err)

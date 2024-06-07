@@ -7,7 +7,6 @@ import (
 	"url-shortener/pkg/models"
 )
 
-
 // CreateTask создаёт новый задачу в хранилище.
 func (s *Storage) CreateImage(image []byte, created time.Time) (int, error) {
 	const op = "storage.sql.CreateImage"
@@ -75,7 +74,6 @@ func (s *Storage) DeleteImage(id int) error {
 	return nil
 }
 
-
 func (s *Storage) GetImage(id int) (models.Image, error) {
 	const op = "storage.sql.GetImage"
 	resErr := models.Image{}
@@ -97,11 +95,6 @@ func (s *Storage) GetImage(id int) (models.Image, error) {
 	err = stmt.QueryRow(id).Scan(&res.ID, &res.Imgur_ID, &res.Link, &res.Created)
 	if err != nil {
 		return resErr, fmt.Errorf("%s: execute statement: %w", op, err)
-	}
-
-	if err != nil {
-		tx.Rollback()
-		return resErr, fmt.Errorf("%s: %w", op, err)
 	}
 
 	err = tx.Commit()
